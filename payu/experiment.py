@@ -219,6 +219,9 @@ class Experiment(object):
         if self.debug:
             envmod.module('load', 'totalview')
 
+        if self.config.get('runlog', False):
+            envmod.module('load', 'nco')
+
     def set_expt_pathnames(self):
 
         # Local "control" path
@@ -520,7 +523,7 @@ class Experiment(object):
         mkdir_p(self.restart_path)
 
         for model in self.models:
-            model.archive()
+            model.archive(runlog=self.runlog)
 
         # Postprocess the model suite
         if len(self.models) > 1:

@@ -68,4 +68,13 @@ class Runlog(object):
         except sp.CalledProcessError:
             print('TODO: Check if commit is unchanged')
 
+        # Save the current git hash regardless of the success of the last commit
+        cmd = 'git rev-parse HEAD'
+        print(cmd)
+        try:
+            self.exptID = sp.check_output(shlex.split(cmd), cwd=self.expt.control_path)
+        except sp.CalledProcessError:
+            print('Failed to find git id in {}'.format(self.expt.control_path))
+            self.exptID = None
+
         f_null.close()

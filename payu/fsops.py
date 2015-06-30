@@ -95,3 +95,14 @@ def patch_lustre_path(f_path):
             f_path = './' + f_path
 
     return f_path
+
+def tagfile(filename,tagName,tagID):
+    """Add global tag to a datafile. Currently only support netCDF."""
+
+    cmd = 'ncatted -O -h -a {},global,o,c,{} {}'.format(tagName,str(tagID),filename)
+    print(cmd)
+    try:
+        sp.check_call(shlex.split(cmd), stdout=f_null)
+    except sp.CalledProcessError:
+        print('Failed to add tag {} to {}'.format(tagName,filename))
+       

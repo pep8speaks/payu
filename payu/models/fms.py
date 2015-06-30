@@ -18,6 +18,7 @@ import subprocess as sp
 
 # Local
 from payu.models.model import Model
+from payu.fsops import tagfile
 
 
 class Fms(Model):
@@ -48,6 +49,14 @@ class Fms(Model):
 
         cmd = 'mv {} {}'.format(self.work_restart_path, self.restart_path)
         sp.check_call(shlex.split(cmd))
+
+        runlog = kwargs["runlog"]
+
+        if runlog:
+            for f in os.listdir(self.output_path):
+                tagfile(os.path.join(self.output_path,f),"ExptID",runlog.exptID)
+            for f in os.listdir(self.restart_path):
+                tagfile(os.path.join(self.output_path,f),"ExptID",runlog.exptID)
 
     def collate(self):
 
