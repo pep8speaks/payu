@@ -7,6 +7,7 @@ from payu.models.mom import Mom
 from payu.models.oasis import Oasis
 from payu.models.um import UnifiedModel
 from payu.models.mom6 import Mom6
+from payu.models.generic import Generic
 
 index = {
     'access':   Access,
@@ -18,4 +19,5 @@ index = {
     'oasis':    Oasis,
     'um':       UnifiedModel,
     'mom6':     Mom6,
+    'generic':  Generic,
 }
