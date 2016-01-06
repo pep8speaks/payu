@@ -17,7 +17,6 @@ import os
 import sys
 import shlex
 import shutil
-import subprocess as sp
 import datetime
 
 # Extensions

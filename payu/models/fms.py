@@ -14,11 +14,11 @@ from collections import defaultdict
 import os
 import resource as res
 import shlex
-import subprocess as sp
 # Use multiprocessing dummy (threads) as collate jobs run in own process
 import multiprocessing.dummy as multiprocessing
 
 # Local
+import payu.subprocess_wrapper as sp
 from payu.models.model import Model
 
 

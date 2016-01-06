@@ -13,12 +13,12 @@ import importlib
 import os
 import pkgutil
 import shlex
-import subprocess
 import sys
 
 import yaml
 
 import payu
+import payu.subprocess_wrapper as subprocess
 import payu.envmod as envmod
 from payu.models import index as supported_models
 import payu.subcommands

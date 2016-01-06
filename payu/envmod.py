@@ -7,7 +7,7 @@
 
 import os
 import shlex
-import subprocess
+import payu.subprocess_wrapper as subprocess
 
 DEFAULT_BASEPATH = '/opt/Modules'
 DEFAULT_VERSION = '3.2.6'
@@ -60,8 +60,8 @@ def module(command, *args):
 
     cmd = '{0} python {1} {2}'.format(modulecmd, command, ' '.join(args))
 
-    envs, _ = subprocess.Popen(shlex.split(cmd),
-                               stdout=subprocess.PIPE).communicate()
+    envs = subprocess.check_output(shlex.split(cmd))
+
     exec(envs)
 
 

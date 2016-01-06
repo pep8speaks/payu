@@ -14,9 +14,9 @@ import os
 import shutil
 import shlex
 import sys
-import subprocess as sp
 
 # Local
+import payu.subprocess_wrapper as sp
 from payu import envmod
 from payu.fsops import make_symlink, mkdir_p
 

@@ -13,12 +13,12 @@ import os
 import sys
 import shlex
 import shutil as sh
-import subprocess as sp
 
 # Extensions
 import f90nml
 
 # Local
+import payu.subprocess_wrapper as sp
 from payu.fsops import mkdir_p
 from payu.models.model import Model
 
@@ -158,7 +158,7 @@ class Mitgcm(Model):
                 self.work_path,
                 os.path.join(self.work_path, 'STDOUT.tar.bz2'))
 
-            rc = sp.Popen(shlex.split(cmd) + stdout_files).wait()
+            rc = sp.call(shlex.split(cmd) + stdout_files)
             assert rc == 0
 
         for f in stdout_files:

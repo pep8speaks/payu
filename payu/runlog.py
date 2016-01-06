@@ -11,9 +11,9 @@
 import datetime
 import os
 import shlex
-import subprocess as sp
 
 # Local
+import payu.subprocess_wrapper as sp
 from payu import envmod
 from payu.fsops import DEFAULT_CONFIG_FNAME
 

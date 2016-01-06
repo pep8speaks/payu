@@ -13,7 +13,6 @@ import os
 import sys
 import shlex
 import shutil
-import subprocess
 
 # Extensions
 import f90nml

@@ -18,9 +18,9 @@ import resource
 import sys
 import shlex
 import shutil
-import subprocess as sp
 
 # Local
+import payu.subprocess_wrapper as sp
 from payu import envmod
 from payu.fsops import mkdir_p, make_symlink, read_config
 from payu.models import index as model_index
@@ -485,10 +485,8 @@ class Experiment(object):
 
         if env:
             # TODO: Replace with mpirun -x flag inputs
-            proc = sp.Popen(shlex.split(cmd), stdout=f_out, stderr=f_err,
+            rc = sp.call(shlex.split(cmd), stdout=f_out, stderr=f_err,
                             env=os.environ.copy())
-            proc.wait()
-            rc = proc.returncode
         else:
             rc = sp.call(shlex.split(cmd), stdout=f_out, stderr=f_err)
 
@@ -678,7 +676,7 @@ class Experiment(object):
             cmd = shlex.split(cmd)
 
             for rsync_attempt in range(max_rsync_attempts):
-                rc = sp.Popen(cmd).wait()
+                rc = sp.call(cmd)
                 if rc == 0:
                     break
                 else:

@@ -12,11 +12,11 @@
 import os
 import shlex
 import shutil
-import subprocess
 import sys
 
 # Local
 import f90nml
+import payu.subprocess_wrapper as subprocess
 import payu.envmod
 from payu.models.fms import Fms
 from payu.fsops import mkdir_p
@@ -301,5 +301,5 @@ class Mom(Fms):
 
             cmd = ('ncks -d %s,%.1f,%.1f -o %s %s'
                    % (t_axis, t_start, t_end, out_fpath, in_fpath))
-            rc = subprocess.Popen(shlex.split(cmd)).wait()
+            rc = subprocess.call(shlex.split(cmd))
             assert rc == 0
