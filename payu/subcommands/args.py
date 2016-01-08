@@ -70,14 +70,35 @@ hard_sweep = {
     }
 }
 
+# Debug flag
+debug = {
+    'flags': ('--debug', '-d'),
+    'parameters': {
+        'action':   'store_true',
+        'dest':     'debug',
+        'help':     'Do not run, just emit debugging output',
+    }
+}
+
+# Debug flag
+verbose = {
+    'flags': ('--verbose', '-v'),
+    'parameters': {
+        'action':   'store_true',
+        'dest':     'verbose',
+        'help':     'Run, but emit debugging output',
+    }
+}
+
 # Explicitly set output_path
 dir_path = {
-    'flags': ('--directory', '--dir', '-d'),
+    'flags': ('--path', '-p'),
     'parameters': {
         'action':   'store',
         'dest':     'dir_path',
         'default':  None,
         'help':     'The output directory, this will over-ride the \
-                     directory determined from current run number',
+                     directory determined from current run number. \
+                     Useful for specifying no standard collation directory',
     }
 }

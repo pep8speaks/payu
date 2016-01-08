@@ -8,6 +8,7 @@
 import os
 import shlex
 import payu.subprocess_wrapper as subprocess
+# import subprocess as spr
 
 DEFAULT_BASEPATH = '/opt/Modules'
 DEFAULT_VERSION = '3.2.6'
@@ -62,7 +63,10 @@ def module(command, *args):
 
     envs = subprocess.check_output(shlex.split(cmd))
 
-    exec(envs)
+    try:
+        exec(envs)
+    except TypeError:
+        pass
 
 
 def lib_update(bin_path, lib_name):

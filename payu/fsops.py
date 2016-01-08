@@ -10,9 +10,10 @@
 
 # Standard library
 import errno
-import os
+# import os
 
 # Extensions
+import payu.os_wrapper as os
 import yaml
 
 DEFAULT_CONFIG_FNAME = 'config.yaml'
@@ -64,13 +65,13 @@ def make_symlink(src_path, lnk_path):
     except OSError as exc:
         if exc.errno != errno.EEXIST:
             raise
-        elif not os.path.islink(lnk_path):
+        elif not os.islink(lnk_path):
             # Warn the user, but do not interrput the job
             print("Warning: Cannot create symbolic link to {p}; a file named "
                   "{f} already exists.".format(p=src_path, f=lnk_path))
         else:
             # Overwrite any existing symbolic link
-            if os.path.realpath(lnk_path) != src_path:
+            if os.realpath(lnk_path) != src_path:
                 os.remove(lnk_path)
                 os.symlink(src_path, lnk_path)
 
@@ -78,7 +79,7 @@ def make_symlink(src_path, lnk_path):
 def splitpath(path):
     """Recursively split a filepath into all directories and files."""
 
-    head, tail = os.path.split(path)
+    head, tail = os.split(path)
     if tail == '':
         return head,
 
@@ -89,7 +90,7 @@ def patch_lustre_path(f_path):
     """Patch any 60-character pathnames, to avoid a current Lustre bug."""
 
     if CHECK_LUSTRE_PATH_LEN and len(f_path) == 60:
-        if os.path.isabs(f_path):
+        if os.isabs(f_path):
             f_path = '/.' + f_path
         else:
             f_path = './' + f_path

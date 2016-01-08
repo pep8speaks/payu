@@ -12,7 +12,7 @@ import errno
 import os
 import sys
 import shlex
-import shutil as sh
+import shutil
 
 # Extensions
 import f90nml
@@ -139,7 +139,7 @@ class Mitgcm(Model):
         for path in mnc_paths:
             for f in os.listdir(path):
                 f_path = os.path.join(path, f)
-                sh.move(f_path, self.work_path)
+                shutil.move(f_path, self.work_path)
             os.rmdir(path)
 
         mkdir_p(self.restart_path)
@@ -166,7 +166,7 @@ class Mitgcm(Model):
 
         for f in restart_files:
             f_src = os.path.join(self.work_path, f)
-            sh.move(f_src, self.restart_path)
+            shutil.move(f_src, self.restart_path)
 
     def collate(self, clear_tiles=True, partition=None):
         import mnctools as mnc
