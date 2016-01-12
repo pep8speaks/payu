@@ -8,13 +8,11 @@
    :license: Apache License, Version 2.0, see LICENSE for details
 """
 
-# Standard library
-import os
-
 # Extensions
 import f90nml
 
 # Local
+import payu.os_wrapper as os
 from payu.models.fms import Fms
 
 

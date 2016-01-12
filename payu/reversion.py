@@ -7,9 +7,9 @@
    :license: Apache License, Version 2.0, see LICENSE for details
 """
 
-import os
 import sys
 
+import payu.os_wrapper as os
 import payu.envmod as envmod
 
 

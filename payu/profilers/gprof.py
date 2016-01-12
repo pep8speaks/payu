@@ -1,6 +1,5 @@
-import os
-import shutil
-
+import payu.os_wrapper as os
+import payu.shutil_wrapper as shutil
 from payu.profilers.profiler import Profiler
 from payu.fsops import mkdir_p
 

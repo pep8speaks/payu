@@ -72,7 +72,7 @@ hard_sweep = {
 
 # Debug flag
 debug = {
-    'flags': ('--debug', '-d'),
+    'flags': ('--debug','-d'),
     'parameters': {
         'action':   'store_true',
         'dest':     'debug',

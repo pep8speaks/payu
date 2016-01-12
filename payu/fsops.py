@@ -10,7 +10,6 @@
 
 # Standard library
 import errno
-# import os
 
 # Extensions
 import payu.os_wrapper as os
@@ -90,7 +89,7 @@ def patch_lustre_path(f_path):
     """Patch any 60-character pathnames, to avoid a current Lustre bug."""
 
     if CHECK_LUSTRE_PATH_LEN and len(f_path) == 60:
-        if os.isabs(f_path):
+        if os.path.isabs(f_path):
             f_path = '/.' + f_path
         else:
             f_path = './' + f_path

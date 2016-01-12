@@ -9,10 +9,10 @@
 
 # Standard Library
 import datetime
-import os
 import shlex
 
 # Local
+import payu.os_wrapper as os
 import payu.subprocess_wrapper as sp
 from payu import envmod
 from payu.fsops import DEFAULT_CONFIG_FNAME

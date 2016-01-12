@@ -9,15 +9,15 @@
 
 # Standard Library
 import errno
-import os
 import sys
 import shlex
-import shutil
 
 # Extensions
 import f90nml
 
 # Local
+import payu.os_wrapper as os
+import payu.shutil_wrapper as shutil
 import payu.subprocess_wrapper as sp
 from payu.fsops import mkdir_p
 from payu.models.model import Model

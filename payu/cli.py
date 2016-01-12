@@ -10,7 +10,7 @@
 import argparse
 import errno
 import importlib
-import os
+import os.path
 import pkgutil
 import shlex
 import sys
@@ -20,6 +20,7 @@ import yaml
 import payu
 import payu.debug
 import payu.subprocess_wrapper as subprocess
+import payu.os_wrapper as os
 import payu.envmod as envmod
 from payu.models import index as supported_models
 import payu.subcommands
@@ -40,20 +41,15 @@ def parse():
 
     subcmds = [importlib.import_module(mod) for mod in modnames]
 
-    # Make a parent command parser for debugging that every command will inherit
-    parent_parser = argparse.ArgumentParser(add_help=False)
-    for arg in [payu.subcommands.args.debug, payu.subcommands.args.verbose]:
-        parent_parser.add_argument(*arg['flags'], **arg['parameters'])
-
     # Construct the subcommand parser
-    parser = argparse.ArgumentParser(parents=[parent_parser])
+    parser = argparse.ArgumentParser()
     parser.add_argument('--version', action='version',
                         version='payu {}'.format(payu.__version__))
 
     subparsers = parser.add_subparsers()
 
     for cmd in subcmds:
-        cmd_parser = subparsers.add_parser(cmd.title, parents=[parent_parser], **cmd.parameters)
+        cmd_parser = subparsers.add_parser(cmd.title, **cmd.parameters)
         cmd_parser.set_defaults(run_cmd=cmd.runcmd)
 
         for arg in cmd.arguments:
@@ -64,10 +60,6 @@ def parse():
         parser.print_help()
     else:
         args = vars(parser.parse_args())
-        if args.pop('verbose',False):
-            payu.debug.verbose(True)
-        if args.pop('debug',False):
-            payu.debug.dry_run(True)
         run_cmd = args.pop('run_cmd')
         run_cmd(**args)
 

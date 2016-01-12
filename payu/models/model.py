@@ -10,12 +10,12 @@
 
 # Standard Library
 import errno
-import os
-import shutil
 import shlex
 import sys
 
 # Local
+import payu.os_wrapper as os
+import payu.shutil_wrapper as shutil
 import payu.subprocess_wrapper as sp
 from payu import envmod
 from payu.fsops import make_symlink, mkdir_p

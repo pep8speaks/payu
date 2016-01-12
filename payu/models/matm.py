@@ -8,10 +8,8 @@
    :license: Apache License, Version 2.0, see LICENSE for details
 """
 
-# Standard Library
-import os
-
 # Local
+import payu.os_wrapper as os
 from payu.models.model import Model
 from payu.fsops import mkdir_p
 

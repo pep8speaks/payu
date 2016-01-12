@@ -12,14 +12,14 @@ from __future__ import print_function
 import datetime
 import fileinput
 import imp
-import os
-import shutil
 import string
 
 # Extensions
 import f90nml
 
 # Local
+import payu.os_wrapper as os
+import payu.shutil_wrapper as shutil
 from payu.fsops import mkdir_p, make_symlink
 from payu.models.model import Model
 import payu.calendar as cal

@@ -13,16 +13,16 @@ from __future__ import print_function
 
 # Standard Library
 import errno
-import os
 import sys
 import shlex
-import shutil
 import datetime
 
 # Extensions
 import f90nml
 
 # Local
+import payu.os_wrapper as os
+import payu.shutil_wrapper as shutil
 import payu.calendar as cal
 from payu.fsops import make_symlink
 from payu.models.model import Model

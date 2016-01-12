@@ -9,12 +9,12 @@
 """
 
 # Standard Library
-import os
 import shlex
-import shutil
 import sys
 
 # Local
+import payu.os_wrapper as os
+import payu.shutil_wrapper as shutil
 import f90nml
 import payu.subprocess_wrapper as subprocess
 import payu.envmod

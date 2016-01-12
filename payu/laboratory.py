@@ -11,10 +11,11 @@
 from __future__ import print_function
 
 # Standard Library
-import os
 import pwd
+import os.path
 
 # Local
+import payu.os_wrapper as os
 from payu.fsops import mkdir_p, read_config
 
 

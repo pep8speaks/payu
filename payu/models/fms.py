@@ -11,7 +11,6 @@
 # Standard Library
 
 from collections import defaultdict
-import os
 import resource as res
 import shlex
 # Use multiprocessing dummy (threads) as collate jobs run in own process
@@ -19,7 +18,10 @@ import multiprocessing.dummy as multiprocessing
 
 # Local
 import payu.subprocess_wrapper as sp
+import payu.os_wrapper as os
 from payu.models.model import Model
+
+import payu.debug
 
 
 def cmdthread(cmd, cwd):
@@ -28,10 +30,13 @@ def cmdthread(cmd, cwd):
     # it doesn't get scrambled when collates are run in parallel
     result = True
     try:
+        print 'In tryblock'
+        print ' -- ',payu.debug.is_dry_run, payu.debug.is_verbose,' -- '
+        print cmd
         output = sp.check_output(shlex.split(cmd), cwd=cwd, stderr=sp.STDOUT)
     except:
         result = False
-    print(output)
+    print("**",output,"**",)
     return result
 
 
@@ -121,7 +126,7 @@ class Fms(Model):
 
             cmd = '{} {} {} {}'.format(mppnc_path, collate_flags, nc_fname,
                                        ' '.join(mnc_tiles[nc_fname]))
-            print(cmd)
+            # print(cmd)
             pool.apply_async(cmdthread, args=(cmd, self.output_path))
 
         pool.close()

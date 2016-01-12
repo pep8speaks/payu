@@ -10,14 +10,14 @@ http://www.apache.org/licenses/LICENSE-2.0
 """
 
 # Standard Library
-import os
 import re
-import shutil
 
 # Extensions
 import f90nml
 
 # Local
+import payu.os_wrapper as os
+import payu.shutil_wrapper as shutil
 from payu.fsops import make_symlink
 from payu.models.model import Model
 import payu.calendar as cal

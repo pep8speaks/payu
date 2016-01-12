@@ -4,7 +4,7 @@ from functools import wraps
 
 # Globals
 is_dry_run = False
-is_verbose = False
+is_verbose = True
 retval = 0
 
 def return_value(value):
@@ -23,6 +23,30 @@ def dry_run(Flag):
     is_dry_run = Flag
     if is_dry_run: verbose(True)
 
+def dryrunner(func):
+    """
+    Function decorator to add dry run checks
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if is_dry_run:
+            return retval
+        else:
+            return func(*args, **kwargs)
+    return wrapper
+
+def verbosity(func):
+    """
+    Function decorator to add verbose output
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if is_verbose:
+            filename, linenum, routine = get_caller()
+            print(json.dumps([ filename, linenum, routine, func.__name__, args, kwargs ] ))
+        return func(*args, **kwargs)
+    return wrapper
+
 def debugger(func):
     """
     Function decorator to add verbose output and dry run checks
@@ -31,7 +55,7 @@ def debugger(func):
     def wrapper(*args, **kwargs):
         if is_verbose:
             filename, linenum, routine = get_caller()
-            print(json.dumps({ filename : { linenum : [ routine, args, kwargs ] } }))
+            print(json.dumps([ filename, linenum, routine, func.__name__, args, kwargs ] ))
         if is_dry_run:
             return retval
         else:

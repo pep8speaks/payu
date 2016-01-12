@@ -5,8 +5,9 @@
    A modular port of the Environment Modules Python ``init`` script
 """
 
-import os
 import shlex
+import os.path
+import payu.os_wrapper as os
 import payu.subprocess_wrapper as subprocess
 # import subprocess as spr
 

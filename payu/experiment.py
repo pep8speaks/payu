@@ -13,14 +13,15 @@ from __future__ import print_function
 # Standard Library
 import errno
 import getpass
-import os
 import resource
 import sys
 import shlex
 import shutil
+import os.path
 
 # Local
 import payu.subprocess_wrapper as sp
+import payu.os_wrapper as os
 from payu import envmod
 from payu.fsops import mkdir_p, make_symlink, read_config
 from payu.models import index as model_index

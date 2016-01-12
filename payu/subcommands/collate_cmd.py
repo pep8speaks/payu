@@ -2,9 +2,9 @@
 
 # Standard Library
 import argparse
-import os
 
 # Local
+import payu.os_wrapper as os
 import payu
 from payu import cli
 from payu.experiment import Experiment
@@ -15,10 +15,10 @@ title = 'collate'
 parameters = {'description': 'Collate tiled output into single output files'}
 
 arguments = [args.model, args.config, args.initial, args.nruns,
-             args.laboratory, args.dir_path]
+             args.laboratory, args.dir_path, args.debug, args.verbose]
 
 
-def runcmd(model_type, config_path, init_run, n_runs, lab_path, dir_path):
+def runcmd(model_type, config_path, init_run, n_runs, lab_path, dir_path, debug, verbose):
 
     pbs_config = cli.get_config(config_path)
     pbs_vars = cli.set_env_vars(init_run, n_runs, lab_path, dir_path)
@@ -77,6 +77,11 @@ def runscript():
 
     pbs_vars = cli.set_env_vars(run_args.init_run, run_args.n_runs,
                                 run_args.lab_path, run_args.dir_path)
+
+    if run_args.verbose:
+        payu.debug.verbose(True)
+    if run_args.debug:
+        payu.debug.dry_run(True)
 
     for var in pbs_vars:
         os.environ[var] = str(pbs_vars[var])

@@ -15,7 +15,7 @@ title = 'run'
 parameters = {'description': 'Run the model experiment'}
 
 arguments = [args.model, args.config, args.initial, args.nruns,
-             args.laboratory]
+             args.laboratory, args.verbose, args.debug]
 
 
 def runcmd(model_type, config_path, init_run, n_runs, lab_path):
@@ -104,6 +104,11 @@ def runscript():
         parser.add_argument(*arg['flags'], **arg['parameters'])
 
     run_args = parser.parse_args()
+
+    if run_args.verbose:
+        payu.debug.verbose(True)
+    if run_args.debug:
+        payu.debug.dry_run(True)
 
     lab = Laboratory(run_args.model_type, run_args.config_path,
                      run_args.lab_path)

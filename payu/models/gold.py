@@ -9,13 +9,11 @@ Licensed under the Apache License, Version 2.0
 http://www.apache.org/licenses/LICENSE-2.0
 """
 
-# Standard library
-import os
-
 # Extensions
 import f90nml
 
 # Local
+import payu.os_wrapper as os
 from payu.models.fms import Fms
 
 
