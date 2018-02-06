@@ -26,6 +26,7 @@ from payu.fsops import mkdir_p, make_symlink, read_config
 from payu.models import index as model_index
 import payu.profilers
 from payu.runlog import Runlog
+from payu.manifest import PayuManifest
 
 # Environment module support on vayu
 module_path = '/projects/v45/modules'
@@ -75,6 +76,9 @@ class Experiment(object):
             model.set_input_paths()
 
         self.set_output_paths()
+
+        # Manifests must exist for runlog
+        self.init_manifests()
 
         # Miscellaneous configurations
         # TODO: Move this stuff somewhere else
@@ -129,6 +133,40 @@ class Experiment(object):
             self.model = ModelType(self, self.model_name, model_config)
         else:
             self.model = None
+
+    def init_manifests(self):
+        
+        # Manifest control configuration
+        manifest_config = self.config.get('manifest', {})
+
+        # Not currently supporting specifying hash functions
+        # self.hash_functions = manifest_config.get('hashfns', ['nchash','binhash','md5'])
+
+        self.input_manifest = PayuManifest(manifest_config.get('input', 'mf_input.yaml'))
+        self.restart_manifest = PayuManifest(manifest_config.get('restart', 'mf_restart.yaml'))
+
+        # Confirm that manifest file exists
+        self.have_input_manifest = os.path.exists(self.input_manifest.path) and not manifest_config.get('overwrite',False)
+
+        if self.have_input_manifest:
+
+            # Read manifest
+            self.input_manifest.load()
+
+            # if manifest is empty revert flag to ensure input directories are used
+            if len(self.input_manifest) == 0:
+                self.have_input_manifest = False
+
+        for model in self.models:
+            # Try and find a manifest file in the restart dir
+            restart_mf = PayuManifest.find(model.prior_restart_path)
+            if restart_mf is not None:
+                print("Loading restart manifest: {}".format(os.path.join(model.prior_restart_path,restart_mf.path)))
+                self.restart_manifest.update(restart_mf,newpath=os.path.join('work',model.work_init_path))
+                # Have two flags, one per model, the other controls if there is a call
+                # to make_links in setup()
+                model.have_restart_manifest = True
+                self.have_restart_manifest = True
 
     def set_counters(self):
         # Assume that ``set_paths`` has already been called
@@ -347,6 +385,28 @@ class Experiment(object):
         # Call the macro-model setup
         if len(self.models) > 1:
             self.model.setup()
+
+        print("Writing input manifest")
+        self.input_manifest.dump()
+        print("Writing restart manifest")
+        self.restart_manifest.dump()
+
+        # Use manifest to make symbolic links in the work directory
+        if self.have_input_manifest:
+            self.input_manifest.make_links()
+
+        # Use manifest to make symbolic links in the work directory
+        if self.have_restart_manifest:
+            self.restart_manifest.make_links()
+
+        print("Checking input manifest")
+        if not self.input_manifest.check():
+            sys.stderr.write("Input manifest check invalid!\n")
+            sys.exit(1)
+        print("Checking restart manifest")
+        if not self.restart_manifest.check():
+            sys.stderr.write("Restart manifest check invalid!\n")
+            sys.exit(1)
 
         setup_script = self.userscripts.get('setup')
         if setup_script:

@@ -19,6 +19,7 @@ import subprocess as sp
 # Local
 from payu import envmod
 from payu.fsops import make_symlink, mkdir_p
+from payu.manifest import PayuManifest
 
 
 class Model(object):
@@ -60,6 +61,9 @@ class Model(object):
         self.repo_url = None
         self.repo_tag = None
         self.build_command = None
+
+        # Manifest
+        self.have_restart_manifest = None
 
     def set_model_pathnames(self):
 
@@ -166,29 +170,38 @@ class Model(object):
                 else:
                     raise
 
-        # Link restart files from prior run
+        # Link restart files from prior run on a model-by-model basis
         if self.prior_restart_path and not self.expt.repeat_run:
-            restart_files = self.get_prior_restart_files()
-            for f_name in restart_files:
-                f_restart = os.path.join(self.prior_restart_path, f_name)
-                f_input = os.path.join(self.work_init_path, f_name)
-                if self.copy_restarts:
-                    shutil.copy(f_restart, f_input)
-                else:
-                    make_symlink(f_restart, f_input)
-
-        # Link input data
-        for input_path in self.input_paths:
-            input_files = os.listdir(input_path)
-            for f_name in input_files:
-                f_input = os.path.join(input_path, f_name)
-                f_work_input = os.path.join(self.work_input_path, f_name)
-                # Do not use input file if it is in RESTART
-                if not os.path.exists(f_work_input):
-                    if self.copy_inputs:
-                        shutil.copy(f_input, f_work_input)
+            if not self.have_restart_manifest:
+                restart_files = self.get_prior_restart_files()
+                for f_name in restart_files:
+                    f_restart = os.path.join(self.prior_restart_path, f_name)
+                    f_input = os.path.join(self.work_init_path, f_name)
+                    if self.copy_restarts:
+                        shutil.copy(f_restart, f_input)
                     else:
-                        make_symlink(f_input, f_work_input)
+                        make_symlink(f_restart, f_input)
+                    # Add to restart manifest
+                    sympath = os.path.join('work',os.path.relpath(f_input,self.expt.work_path))
+                    self.expt.restart_manifest.add_fast(sympath)
+
+        # Don't link input files if we have a manifest with this information
+        if not self.expt.have_input_manifest:
+            # Link input data
+            for input_path in self.input_paths:
+                input_files = os.listdir(input_path)
+                for f_name in input_files:
+                    f_input = os.path.join(input_path, f_name)
+                    f_work_input = os.path.join(self.work_input_path, f_name)
+                    # Do not use input file if it is in RESTART
+                    if not os.path.exists(f_work_input):
+                        if self.copy_inputs:
+                            shutil.copy(f_input, f_work_input)
+                        else:
+                            make_symlink(f_input, f_work_input)
+                    # Add to input manifest
+                    sympath = os.path.join('work',os.path.relpath(f_work_input,self.expt.work_path))
+                    self.expt.input_manifest.add_fast(sympath)
 
         timestep = self.config.get('timestep')
         if timestep:
