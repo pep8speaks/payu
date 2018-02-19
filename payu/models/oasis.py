@@ -31,7 +31,7 @@ class Oasis(Model):
         super(Oasis, self).__init__(expt, name, config)
 
         self.model_type = 'oasis'
-        self.copy_restarts = True
+        self.copy_restarts = False
         self.copy_inputs = False
 
         self.config_files = ['namcouple']
@@ -40,23 +40,33 @@ class Oasis(Model):
         super(Oasis, self).setup()
 
         # Copy OASIS data to the other submodels
+        input_files = []
 
         # TODO: Parse namcouple to determine filelist
         # TODO: Let users map files to models
-        input_files = [f for f in os.listdir(self.work_path)
-                       if f not in self.config_files]
+        if not self.expt.have_restart_manifest:
 
-        for model in self.expt.models:
+            input_files = [os.path.basename(f) for f in self.restart_manifest]
 
-            # Skip the oasis self-reference
-            if model == self:
-                continue
+            input_files_local = []
 
-            mkdir_p(model.work_path)
-            for f_name in (self.config_files + input_files):
-                f_path = os.path.join(self.work_path, f_name)
-                f_sympath = os.path.join(model.work_path, f_name)
-                make_symlink(f_path, f_sympath)
+            for model in self.expt.models:
+
+                # Skip the oasis self-reference
+                if model == self:
+                    continue
+
+                mkdir_p(model.work_path)
+                for f_name in (self.config_files + input_files):
+                    f_path = os.path.join(self.work_path, f_name)
+                    f_sympath = os.path.join(model.work_path, f_name)
+                    make_symlink(f_path, f_sympath)
+                    if f_name not in self.config_files
+                        input_files_local.append(os.path.join(model.work_path_local,f_name))
+
+            if input_files_local:
+                # Add to input manifest all at once (parallelised)
+                self.expt.restart_manifest.add_fast(input_files_local)
 
         if self.expt.runtime:
             # TODO: Implement runtime patch to namcouple

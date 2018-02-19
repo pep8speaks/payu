@@ -211,7 +211,7 @@ class Model(object):
                             shutil.copy(f_input, f_work_input)
                         else:
                             make_symlink(f_input, f_work_input)
-                    input_files_local.append(os.path.join(self.work_input_path_local,f_name))
+                        input_files_local.append(os.path.join(self.work_input_path_local,f_name))
                 # Add to input manifest all at once (parallelised)
                 self.expt.input_manifest.add_fast(input_files_local)
 
