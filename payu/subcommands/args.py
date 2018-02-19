@@ -91,3 +91,13 @@ dir_path = {
                      directory determined from current run number',
     }
 }
+
+# Specify a reproducible run
+reproduce = {
+    'flags': ('--reproduce', '--repro', '-r'),
+    'parameters': {
+        'action':   'store_true',
+        'dest':     'reproduce',
+        'help':     'Only run if restart and input manifest are correct',
+    }
+}

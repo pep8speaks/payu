@@ -119,8 +119,6 @@ def runscript():
                      run_args.lab_path)
     expt = Experiment(lab)
 
-    expt.setup()
-
     n_runs_per_submit = expt.config.get('runspersub', 1)
 
     subrun = 1
@@ -138,6 +136,7 @@ def runscript():
         if n_runs_per_submit > 1 and subrun < n_runs_per_submit:
             expt.counter += 1
             expt.set_output_paths()
+            expt.init_manifests()
 
         subrun += 1
 

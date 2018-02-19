@@ -53,8 +53,8 @@ class Cice5(Cice):
 
         self.set_timestep = self.set_local_timestep
 
-        self.copy_restarts = True
-        self.copy_inputs = True
+        # self.copy_restarts = True
+        # self.copy_inputs = True
 
     def set_local_timestep(self, t_step):
         dt = self.ice_in['setup_nml']['dt']
@@ -83,10 +83,10 @@ class Cice5(Cice):
 
         # Delete the old restart file (keep the one in ice.restart_file)
         for f in self.get_prior_restart_files():
-            if 'iced.' in f:
-                assert f != res_name
+            if f.startswith('iced.'):
+                if f == res_name:
+                    continue
                 os.remove(os.path.join(self.restart_path, f))
-                break
 
     def get_prior_restart_files(self):
         if self.prior_restart_path is not None:

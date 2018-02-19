@@ -222,6 +222,7 @@ def submit_job(pbs_script, pbs_config, pbs_vars=None):
     # Enable PBS, in case it's not available
     envmod.setup()
     envmod.module('load', 'pbs')
+    envmod.module('load', 'netcdf')
 
     # If script path does not exist, then check the PATH directories
     if not os.path.isabs(pbs_script):

@@ -53,8 +53,8 @@ class Runlog(object):
                                  for f in config_files)
 
         # Add input file manifests
-        self.manifest.extend(os.path.join(model.control_path,self.expt.input_manifest.path))
-        self.manifest.extend(os.path.join(model.control_path,self.expt.restart_manifest.path))
+        self.manifest.append(os.path.join(model.control_path,self.expt.input_manifest.path))
+        self.manifest.append(os.path.join(model.control_path,self.expt.restart_manifest.path))
 
     def commit(self):
         f_null = open(os.devnull, 'w')
@@ -77,6 +77,8 @@ class Runlog(object):
                 print(cmd)
                 sp.check_call(shlex.split(cmd), stdout=f_null,
                               cwd=self.expt.control_path)
+            else:
+                print("Cannot add {}. Not a file".format(fname))
 
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         commit_msg = '{}: Run {}'.format(timestamp, self.expt.counter)

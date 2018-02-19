@@ -63,7 +63,7 @@ class Model(object):
         self.build_command = None
 
         # Manifest
-        self.have_restart_manifest = None
+        self.have_restart_manifest = False
 
     def set_model_pathnames(self):
 
@@ -91,6 +91,16 @@ class Model(object):
                                           self.exec_name)
         else:
             self.exec_path = None
+
+    def set_local_pathnames(self):
+
+        # This is the path relative to the control directory, required for manifests
+        # and must be called after set_model_pathnames to ensure it captures changes
+        # made in model subclasses which override set_model_pathnames
+        self.work_path_local = os.path.normpath(os.path.join('work',os.path.relpath(self.work_path,self.expt.work_path)))
+        self.work_input_path_local = os.path.normpath(os.path.join('work',os.path.relpath(self.work_input_path,self.expt.work_path)))
+        self.work_restart_path_local = os.path.normpath(os.path.join('work',os.path.relpath(self.work_restart_path,self.expt.work_path)))
+        self.work_init_path_local = os.path.normpath(os.path.join('work',os.path.relpath(self.work_init_path,self.expt.work_path)))
 
     def set_input_paths(self):
 
@@ -174,6 +184,7 @@ class Model(object):
         if self.prior_restart_path and not self.expt.repeat_run:
             if not self.have_restart_manifest:
                 restart_files = self.get_prior_restart_files()
+                restart_files_local = []
                 for f_name in restart_files:
                     f_restart = os.path.join(self.prior_restart_path, f_name)
                     f_input = os.path.join(self.work_init_path, f_name)
@@ -181,15 +192,16 @@ class Model(object):
                         shutil.copy(f_restart, f_input)
                     else:
                         make_symlink(f_restart, f_input)
-                    # Add to restart manifest
-                    sympath = os.path.join('work',os.path.relpath(f_input,self.expt.work_path))
-                    self.expt.restart_manifest.add_fast(sympath)
+                    restart_files_local.append(os.path.join(self.work_init_path_local,f_name))
+                # Add to restart manifest all at once (parallelised)
+                self.expt.restart_manifest.add_fast(restart_files_local)
 
         # Don't link input files if we have a manifest with this information
         if not self.expt.have_input_manifest:
             # Link input data
             for input_path in self.input_paths:
                 input_files = os.listdir(input_path)
+                input_files_local = []
                 for f_name in input_files:
                     f_input = os.path.join(input_path, f_name)
                     f_work_input = os.path.join(self.work_input_path, f_name)
@@ -199,9 +211,9 @@ class Model(object):
                             shutil.copy(f_input, f_work_input)
                         else:
                             make_symlink(f_input, f_work_input)
-                    # Add to input manifest
-                    sympath = os.path.join('work',os.path.relpath(f_work_input,self.expt.work_path))
-                    self.expt.input_manifest.add_fast(sympath)
+                    input_files_local.append(os.path.join(self.work_input_path_local,f_name))
+                # Add to input manifest all at once (parallelised)
+                self.expt.input_manifest.add_fast(input_files_local)
 
         timestep = self.config.get('timestep')
         if timestep:

@@ -32,7 +32,7 @@ class Oasis(Model):
 
         self.model_type = 'oasis'
         self.copy_restarts = True
-        self.copy_inputs = True
+        self.copy_inputs = False
 
         self.config_files = ['namcouple']
 
