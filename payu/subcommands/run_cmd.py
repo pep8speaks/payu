@@ -119,7 +119,8 @@ def runscript():
                      run_args.lab_path)
     expt = Experiment(lab)
 
-    n_runs_per_submit = expt.config.get('runspersub', 1)
+    # Limit runspersub to not exceed expt.n_runs
+    n_runs_per_submit = min(expt.config.get('runspersub', 1),expt.n_runs)
 
     subrun = 1
 
