@@ -32,6 +32,17 @@ def mkdir_p(path):
             raise
 
 
+def remove(path):
+    """Remove a file, silently ignore if file does not exist."""
+
+    try:
+        os.remove(path)
+    except (OSError, IOError) as e: # FileNotFoundError does not exist on Python < 3.3
+        if getattr(e, 'errno', 0) == errno.ENOENT:
+            pass
+        else:
+            raise
+
 def read_config(config_fname=None):
     """Parse input configuration file and return a config dict."""
 
