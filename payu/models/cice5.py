@@ -25,7 +25,7 @@ import f90nml
 
 # Local
 import payu.calendar as cal
-from payu.fsops import make_symlink
+from payu.fsops import make_symlink, remove
 from payu.models.cice import Cice
 from payu.namcouple import Namcouple
 
@@ -73,6 +73,7 @@ class Cice5(Cice):
         self.work_input_path = self.work_restart_path
 
     def archive(self):
+
         super(Cice5, self).archive()
 
         res_ptr_path = os.path.join(self.restart_path, 'ice.restart_file')
@@ -81,12 +82,18 @@ class Cice5(Cice):
 
         assert os.path.exists(os.path.join(self.restart_path, res_name))
 
-        # Delete the old restart file (keep the one in ice.restart_file)
-        for f in self.get_prior_restart_files():
+        # Delete the old restart files (keep the one in ice.restart_file)
+        for f in self.get_restart_files():
             if f.startswith('iced.'):
                 if f == res_name:
                     continue
-                os.remove(os.path.join(self.restart_path, f))
+                remove(os.path.join(self.restart_path, f))
+
+    def get_restart_files(self):
+        if self.restart_path is not None:
+            return sorted(os.listdir(self.restart_path))
+        else:
+            return []
 
     def get_prior_restart_files(self):
         if self.prior_restart_path is not None:
