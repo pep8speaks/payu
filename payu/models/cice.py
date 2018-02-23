@@ -25,7 +25,7 @@ import f90nml
 
 # Local
 import payu.calendar as cal
-from payu.fsops import make_symlink
+from payu.fsops import make_symlink, remove
 from payu.models.model import Model
 from payu.namcouple import Namcouple
 
@@ -137,6 +137,9 @@ class Cice(Model):
 
             res_ptr_path = os.path.join(self.work_init_path,
                                         'ice.restart_file')
+            # Delete the file in case it already exists. Specifically if it is a
+            # link then writing to it will write back to the original link
+            remove(res_ptr_path)
             with open(res_ptr_path, 'w') as res_ptr:
                 res_dir = self.get_ptr_restart_dir()
                 print(os.path.join(res_dir, iced_restart_file), file=res_ptr)
@@ -231,11 +234,13 @@ class Cice(Model):
 
     def archive(self, **kwargs):
 
+        # Delete all symbolic links in work/ice/RESTART
         for f in os.listdir(self.work_input_path):
             f_path = os.path.join(self.work_input_path, f)
             if os.path.islink(f_path):
                 os.remove(f_path)
 
+        # Move work/RESTART directory to archive/restartXXXX/ice
         os.rename(self.work_restart_path, self.restart_path)
 
     def collate(self):
