@@ -87,6 +87,7 @@ class Model(object):
         self.exec_prefix = self.config.get('exe_prefix', '')
         self.exec_name = self.config.get('exe', self.default_exec)
         if self.exec_name:
+            # Full path to exe
             self.exec_path = os.path.join(self.expt.lab.bin_path,
                                           self.exec_name)
         else:
@@ -97,11 +98,19 @@ class Model(object):
         # This is the path relative to the control directory, required for manifests
         # and must be called after set_model_pathnames to ensure it captures changes
         # made in model subclasses which override set_model_pathnames
-        self.work_path_local = os.path.normpath(os.path.join('work',os.path.relpath(self.work_path,self.expt.work_path)))
-        self.work_input_path_local = os.path.normpath(os.path.join('work',os.path.relpath(self.work_input_path,self.expt.work_path)))
-        self.work_restart_path_local = os.path.normpath(os.path.join('work',os.path.relpath(self.work_restart_path,self.expt.work_path)))
-        self.work_init_path_local = os.path.normpath(os.path.join('work',os.path.relpath(self.work_init_path,self.expt.work_path)))
-
+        self.work_path_local = os.path.normpath(os.path.join('work',
+                os.path.relpath(self.work_path,self.expt.work_path)))
+        self.work_input_path_local = os.path.normpath(os.path.join('work',
+                 os.path.relpath(self.work_input_path,self.expt.work_path)))
+        self.work_restart_path_local = os.path.normpath(os.path.join('work',
+                  os.path.relpath(self.work_restart_path,self.expt.work_path)))
+        self.work_init_path_local = os.path.normpath(os.path.join('work',
+                 os.path.relpath(self.work_init_path,self.expt.work_path)))
+        if self.exec_name:
+            # Local path in work directory (symlinked to full path and
+            # added to manifest)
+            self.local_exec_path = os.path.join(self.work_path_local,
+                                          self.exec_name)
     def set_input_paths(self):
 
         if len(self.expt.models) == 1:
@@ -218,6 +227,13 @@ class Model(object):
         timestep = self.config.get('timestep')
         if timestep:
             self.set_timestep(timestep)
+
+        # Make symlink to executable in work directory
+        if self.exec_path: 
+            print('Exe link: ',self.exec_path, self.local_exec_path)
+            make_symlink(self.exec_path, self.local_exec_path)
+            # Add to restart manifest 
+            self.expt.exe_manifest.add_fast(self.local_exec_path)
 
     def set_timestep(self, timestep):
         raise NotImplementedError

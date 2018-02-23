@@ -44,6 +44,11 @@ class Experiment(object):
         self.lab = lab
         self.reproduce = reproduce
 
+        # If the run sets reproduce, default to reproduce executables. Allow user
+        # to specify not to reproduce executables (might not be feasible if
+        # executables don't match platform, or desirable if bugs existed in old exe)
+        self.reproduce_exe = self.reproduce and manifest_config.get('reproduce_exe',True)
+
         # TODO: replace with dict, check versions via key-value pairs
         self.modules = set()
 
@@ -147,17 +152,24 @@ class Experiment(object):
 
         self.input_manifest = PayuManifest(manifest_config.get('input', 'mf_input.yaml'))
         self.restart_manifest = PayuManifest(manifest_config.get('restart', 'mf_restart.yaml'))
+        self.exe_manifest = PayuManifest(manifest_config.get('exe', 'mf_exe.yaml'))
 
-        # Confirm that manifest file exists
+        # Check if manifest files exist
         self.have_input_manifest = os.path.exists(self.input_manifest.path) and not manifest_config.get('overwrite',False)
         self.have_restart_manifest = os.path.exists(self.restart_manifest.path)
+        self.have_exe_manifest = os.path.exists(self.exe_manifest.path)
 
         if self.reproduce:
+            # MUST have input and restart manifests to be able to reproduce a run
             assert(self.have_input_manifest)
             assert(self.have_restart_manifest)
+            if self.reproduce_exe:
+                assert(self.have_exe_manifest)
+        else:
+            # Only use a restart manifest when reproducing a run, otherwise always generare a new one
+            self.have_restart_manifest = False
 
         if self.have_input_manifest:
-
             # Read manifest
             print("Loading input manifest: {}".format(self.input_manifest.path))
             self.input_manifest.load()
@@ -169,8 +181,21 @@ class Experiment(object):
             if len(self.input_manifest) == 0:
                 self.have_input_manifest = False
 
-        if self.reproduce:
+        if self.have_exe_manifest and self.reproduce_exe:
+            # Read manifest
+            print("Loading exe manifest: {}".format(self.exe_manifest.path))
+            self.exe_manifest.load()
 
+            if self.reproduce:
+                assert(len(self.exe_manifest) > 0)
+
+            # if manifest is empty revert flag to ensure input directories are used
+            if len(self.exe_manifest) == 0:
+                self.have_exe_manifest = False
+        else:
+            self.have_exe_manifest = False
+
+        if self.reproduce:
             # Read manifest
             print("Loading restart manifest: {}".format(self.restart_manifest.path))
             self.restart_manifest.load()
@@ -180,9 +205,7 @@ class Experiment(object):
 
             for model in self.models:
                 model.have_restart_manifest = True
-
         else:
-
             for model in self.models:
                 # Try and find a manifest file in the restart dir
                 restart_mf = PayuManifest.find_manifest(model.prior_restart_path)
@@ -224,7 +247,7 @@ class Experiment(object):
                                         for d in restart_dirs
                                         if d.startswith('restart')])
             else:
-                # uepeat runs do not generate restart files, so check outputs
+                # repeat runs do not generate restart files, so check outputs
                 try:
                     output_dirs = [d for d in os.listdir(self.archive_path)
                                    if d.startswith('output')]
@@ -409,13 +432,17 @@ class Experiment(object):
         for model in self.models:
             model.setup()
 
-        # Call the macro-model setup
-        if len(self.models) > 1:
-            self.model.setup()
+        # Use manifest to make symbolic links to executables in the work directory
+        if self.have_exe_manifest:
+            self.input_manifest.make_links()
 
-        # Use manifest to make symbolic links in the work directory
+        # Use manifest to make symbolic links to inputs in the work directory
         if self.have_input_manifest:
             self.input_manifest.make_links()
+
+        # Use manifest to make symbolic links to restarts in the work directory
+        if self.have_restart_manifest:
+            self.restart_manifest.make_links()
 
         if not self.reproduce:
             # Add full hash to all existing files. Don't force, will only add if they don't already exist
@@ -423,23 +450,31 @@ class Experiment(object):
             self.input_manifest.add(hashfn=full_hashes)
             print("Writing input manifest")
             self.input_manifest.dump()
-
-        # Use manifest to make symbolic links in the work directory
-        if self.have_restart_manifest:
-            self.restart_manifest.make_links()
-
-        if not self.reproduce:
             # Add full hash to all existing files. Don't force, will only add if they don't already exist
             print("Add full hashes to restart manifest")
             self.restart_manifest.add(hashfn=full_hashes)
             print("Writing restart manifest")
             self.restart_manifest.dump()
 
+        if not self.reproduce_exe:
+            # Add full hash to all existing files. Don't force, will only add if they don't already exist
+            print("Add full hashes to exe manifest")
+            self.exe_manifest.add(hashfn=full_hashes)
+            print("Writing exe manifest")
+            self.exe_manifest.dump()
+
         print("Checking input manifest")
         self.input_manifest.check_fast(reproduce=self.reproduce)
 
         print("Checking restart manifest")
         self.restart_manifest.check_fast(reproduce=self.reproduce)
+
+        print("Checking exe manifest")
+        self.exe_manifest.check_fast(reproduce=self.reproduce_exe)
+
+        # Call the macro-model setup
+        if len(self.models) > 1:
+            self.model.setup()
 
         setup_script = self.userscripts.get('setup')
         if setup_script:
@@ -511,7 +546,7 @@ class Experiment(object):
         for model in self.models:
 
             # Skip models without executables (e.g. couplers)
-            if not model.exec_path:
+            if not model.local_exec_path:
                 continue
 
             mpi_config = self.config.get('mpi', {})
@@ -520,7 +555,7 @@ class Experiment(object):
             # Update MPI library module (if not explicitly set)
             # TODO: Check for MPI library mismatch across multiple binaries
             if mpi_module is None:
-                mpi_module = envmod.lib_update(model.exec_path, 'libmpi.so')
+                mpi_module = envmod.lib_update(model.local_exec_path, 'libmpi.so')
 
             model_prog = []
 
@@ -562,7 +597,7 @@ class Experiment(object):
                     model_prog = model_prog.append(prof.runscript)
 
             model_prog.append(model.exec_prefix)
-            model_prog.append(model.exec_path)
+            model_prog.append(model.local_exec_path)
 
             mpi_progs.append(' '.join(model_prog))
 
