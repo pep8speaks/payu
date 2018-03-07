@@ -53,8 +53,9 @@ class Runlog(object):
                                  for f in config_files)
 
         # Add input file manifests
-        self.manifest.append(os.path.join(model.control_path,self.expt.input_manifest.path))
-        self.manifest.append(os.path.join(model.control_path,self.expt.restart_manifest.path))
+        self.manifest.append(os.path.join(self.expt.control_path,self.expt.input_manifest.path))
+        self.manifest.append(os.path.join(self.expt.control_path,self.expt.restart_manifest.path))
+        self.manifest.append(os.path.join(self.expt.control_path,self.expt.exe_manifest.path))
 
     def commit(self):
         f_null = open(os.devnull, 'w')

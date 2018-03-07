@@ -58,12 +58,18 @@ class Access(Model):
 
                 # Stage the supplemental input files
                 if model.prior_restart_path:
-                    for f_name in model.access_restarts:
-                        f_src = os.path.join(model.prior_restart_path, f_name)
-                        f_dst = os.path.join(model.work_input_path, f_name)
+                    if not model.have_restart_manifest:
+                        restart_files_local = []
+                        for f_name in model.access_restarts:
+                            f_src = os.path.join(model.prior_restart_path, f_name)
+                            f_dst = os.path.join(model.work_input_path, f_name)
 
-                        if os.path.isfile(f_src):
-                            make_symlink(f_src, f_dst)
+                            if os.path.isfile(f_src):
+                                make_symlink(f_src, f_dst)
+                                restart_files_local.append(os.path.join(model.work_init_path_local,f_name))
+
+                        # Add to restart manifest all at once (parallelised)
+                        self.expt.restart_manifest.add_fast(restart_files_local)
 
             if model.model_type in ('cice', 'matm'):
 
@@ -164,13 +170,13 @@ class Access(Model):
                     if os.path.exists(f_src):
                         shutil.copy2(f_src, f_dst)
 
-            # Copy configs from work path to restart
-            for f_name in model.config_files:
-                f_src = os.path.join(model.work_path, f_name)
-                f_dst = os.path.join(model.restart_path, f_name)
+                # Copy configs from work path to restart
+                for f_name in model.config_files:
+                    f_src = os.path.join(model.work_path, f_name)
+                    f_dst = os.path.join(model.restart_path, f_name)
 
-                if os.path.exists(f_src):
-                    shutil.copy2(f_src, f_dst)
+                    if os.path.exists(f_src):
+                        shutil.copy2(f_src, f_dst)
 
         cice5 = None
         mom = None
