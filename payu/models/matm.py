@@ -9,7 +9,7 @@
 """
 
 # Standard Library
-import os
+import os, shutil
 
 # Local
 from payu.models.model import Model
@@ -39,8 +39,23 @@ class Matm(Model):
 
     def archive(self):
 
+        # Delete all symbolic links in work
+        for f in os.listdir(self.work_path):
+            f_path = os.path.join(self.work_path, f)
+            if os.path.islink(f_path):
+                os.remove(f_path)
+
         # Create an empty restart directory
         mkdir_p(self.restart_path)
+
+        # Copy config files to restart
+        for f in self.config_files:
+            f_path = os.path.join(self.work_path, f)
+            r_path = os.path.join(self.restart_path, f)
+            shutil.copy2(f_path,r_path)
+
+        # Remove the INPUT directory
+        shutil.rmtree(self.work_input_path,ignore_errors=True)
 
     def collate(self):
         pass
