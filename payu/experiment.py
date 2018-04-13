@@ -44,11 +44,6 @@ class Experiment(object):
         self.lab = lab
         self.reproduce = reproduce
 
-        # If the run sets reproduce, default to reproduce executables. Allow user
-        # to specify not to reproduce executables (might not be feasible if
-        # executables don't match platform, or desirable if bugs existed in old exe)
-        self.reproduce_exe = self.reproduce and manifest_config.get('reproduce_exe',True)
-
         # TODO: replace with dict, check versions via key-value pairs
         self.modules = set()
 
@@ -59,6 +54,14 @@ class Experiment(object):
         self.debug = self.config.get('debug', False)
         self.postscript = self.config.get('postscript')
         self.repeat_run = self.config.get('repeat', False)
+
+        # Manifest control configuration
+        self.manifest_config = self.config.get('manifest', {})
+
+        # If the run sets reproduce, default to reproduce executables. Allow user
+        # to specify not to reproduce executables (might not be feasible if
+        # executables don't match platform, or desirable if bugs existed in old exe)
+        self.reproduce_exe = self.reproduce and self.manifest_config.get('reproduce_exe',True)
 
         # Model run time
         self.runtime = None
@@ -142,20 +145,17 @@ class Experiment(object):
 
     def init_manifests(self):
         
-        # Manifest control configuration
-        manifest_config = self.config.get('manifest', {})
-
         self.have_restart_manifest = False
 
         # Not currently supporting specifying hash functions
         # self.hash_functions = manifest_config.get('hashfns', ['nchash','binhash','md5'])
 
-        self.input_manifest = PayuManifest(manifest_config.get('input', 'mf_input.yaml'))
-        self.restart_manifest = PayuManifest(manifest_config.get('restart', 'mf_restart.yaml'))
-        self.exe_manifest = PayuManifest(manifest_config.get('exe', 'mf_exe.yaml'))
+        self.input_manifest = PayuManifest(self.manifest_config.get('input', 'mf_input.yaml'))
+        self.restart_manifest = PayuManifest(self.manifest_config.get('restart', 'mf_restart.yaml'))
+        self.exe_manifest = PayuManifest(self.manifest_config.get('exe', 'mf_exe.yaml'))
 
         # Check if manifest files exist
-        self.have_input_manifest = os.path.exists(self.input_manifest.path) and not manifest_config.get('overwrite',False)
+        self.have_input_manifest = os.path.exists(self.input_manifest.path) and not self.manifest_config.get('overwrite',False)
         self.have_restart_manifest = os.path.exists(self.restart_manifest.path)
         self.have_exe_manifest = os.path.exists(self.exe_manifest.path)
 
@@ -205,17 +205,42 @@ class Experiment(object):
 
             for model in self.models:
                 model.have_restart_manifest = True
+
+            # If the run counter is zero inspect the restart manifest for an appropriate
+            # value
+            for filepath in self.restart_manifest:
+                head = os.path.dirname(self.restart_manifest.fullpath(filepath))
+                # Inspect each element of the fullpath looking for restartxxx style
+                # directories. Exit 
+                while true:
+                    head, tail = os.path.split(head)
+                    if tail.startswith('restart'):
+                        try:
+                            n = int(tail.lstrip('restart'))
+                        except ValueError:
+                            pass
+                        else:
+                            self.counter = n + 1
+                            break
+                            
+                # Short circuit as soon as restart dir found
+                if self.counter == 0: break
+                            
+                    
+                    
+
         else:
             for model in self.models:
-                # Try and find a manifest file in the restart dir
-                restart_mf = PayuManifest.find_manifest(model.prior_restart_path)
-                if restart_mf is not None:
-                    print("Loading restart manifest: {}".format(os.path.join(model.prior_restart_path,restart_mf.path)))
-                    self.restart_manifest.update(restart_mf,newpath=os.path.join(model.work_init_path_local))
-                    # Have two flags, one per model, the other controls if there is a call
-                    # to make_links in setup()
-                    model.have_restart_manifest = True
-                    # self.have_restart_manifest = True
+                if model.prior_restart_path is not None:
+                    # Try and find a manifest file in the restart dir
+                    restart_mf = PayuManifest.find_manifest(model.prior_restart_path)
+                    if restart_mf is not None:
+                        print("Loading restart manifest: {}".format(os.path.join(model.prior_restart_path,restart_mf.path)))
+                        self.restart_manifest.update(restart_mf,newpath=os.path.join(model.work_init_path_local))
+                        # Have two flags, one per model, the other controls if there is a call
+                        # to make_links in setup()
+                        model.have_restart_manifest = True
+                        # self.have_restart_manifest = True
 
     def set_counters(self):
         # Assume that ``set_paths`` has already been called
@@ -257,7 +282,7 @@ class Experiment(object):
                     else:
                         raise
 
-                # First test for restarts
+                # Now look for output directories
                 if output_dirs:
                     self.counter = 1 + max([int(d.lstrip('output'))
                                             for d in output_dirs
@@ -597,7 +622,8 @@ class Experiment(object):
                     model_prog = model_prog.append(prof.runscript)
 
             model_prog.append(model.exec_prefix)
-            model_prog.append(model.local_exec_path)
+            # Use the exec_name (without path) as this is now linked in work
+            model_prog.append(model.exec_name)
 
             mpi_progs.append(' '.join(model_prog))
 
