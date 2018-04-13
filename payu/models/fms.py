@@ -20,6 +20,7 @@ import subprocess as sp
 # Use multiprocessing dummy (threads) as collate jobs run in own process
 import multiprocessing.dummy as multiprocessing
 import sys
+import shutil
 
 # Local
 from payu.models.model import Model
@@ -62,9 +63,11 @@ class Fms(Model):
         cmd = 'rm -rf {}'.format(self.work_input_path)
         sp.check_call(shlex.split(cmd))
 
-        # Archive restart files before processing model output
-        if os.path.isdir(self.restart_path):
-            os.rmdir(self.restart_path)
+        # Delete all symbolic links in work
+        for f in os.listdir(self.work_path):
+            f_path = os.path.join(self.work_path, f)
+            if os.path.islink(f_path):
+                os.remove(f_path)
 
         cmd = 'mv {} {}'.format(self.work_restart_path, self.restart_path)
         sp.check_call(shlex.split(cmd))
