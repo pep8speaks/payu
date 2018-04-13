@@ -20,7 +20,7 @@ from yamanifest.utils import find_files
 import yamanifest as ym
 from copy import deepcopy
 
-import os
+import os,sys
 
 
 # fast_hashes = ['nchash','binhash']

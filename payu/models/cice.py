@@ -60,10 +60,13 @@ class Cice(Model):
         # Assume local paths are relative to the work path
         setup_nml = self.ice_in['setup_nml']
 
+        inp_path = os.path.normpath(setup_nml['input_dir'])
         res_path = os.path.normpath(setup_nml['restart_dir'])
         if not os.path.isabs(res_path):
             res_path = os.path.join(self.work_path, res_path)
-        self.work_init_path = res_path
+        if not os.path.isabs(inp_path):
+            inp_path = os.path.join(self.work_path, inp_path)
+        self.work_init_path = inp_path
         self.work_restart_path = res_path
 
         work_out_path = os.path.normpath(setup_nml['history_dir'])
@@ -104,7 +107,7 @@ class Cice(Model):
         return [sorted(restart_files)[-1]]
 
     def get_ptr_restart_dir(self):
-        return self.ice_in['setup_nml']['restart_dir']
+        return self.ice_in['setup_nml']['input_dir']
 
     def get_access_ptr_restart_dir(self):
         # The ACCESS build of CICE assumes that restart_dir is 'RESTART'
@@ -234,13 +237,22 @@ class Cice(Model):
 
     def archive(self, **kwargs):
 
-        # Delete all symbolic links in work/ice/RESTART
+        # Delete all symbolic links in work/INPUT, move non links
+        # to local work/RESTART
         for f in os.listdir(self.work_input_path):
             f_path = os.path.join(self.work_input_path, f)
             if os.path.islink(f_path):
                 os.remove(f_path)
+            else:
+                os.rename(f_path,os.path.join(self.work_restart_path,f))
 
-        # Move work/RESTART directory to archive/restartXXXX/ice
+        # Delete all symbolic links in work
+        for f in os.listdir(self.work_path):
+            f_path = os.path.join(self.work_path, f)
+            if os.path.islink(f_path):
+                os.remove(f_path)
+
+        # Move work/RESTART directory to archive/restartXXXX
         os.rename(self.work_restart_path, self.restart_path)
 
     def collate(self):
