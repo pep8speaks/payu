@@ -40,13 +40,50 @@ class Oasis(Model):
         super(Oasis, self).setup()
 
         # Copy OASIS data to the other submodels
-        input_files = []
 
         # TODO: Parse namcouple to determine filelist
         # TODO: Let users map files to models
+
+        # Do not need to make these links if using existing restart manifest
         if not self.expt.have_restart_manifest:
 
-            input_files = [os.path.basename(f) for f in self.restart_manifest]
+            restart_files = []
+    
+            # Find all the coupler restart files that have been added
+            # to the restart manifest
+            for f in self.expt.restart_manifest:
+                if f.startswith(self.work_path_local):
+                    restart_files.append(os.path.relpath(f,self.work_path_local)) 
+
+            restart_files_local = set()
+
+            for model in self.expt.models:
+
+                # Skip the oasis self-reference
+                if model == self:
+                    continue
+
+                mkdir_p(model.work_path)
+                for f_name in restart_files + self.config_files:
+                    f_path = os.path.join(self.work_path, f_name)
+                    f_sympath = os.path.join(model.work_path, f_name)
+                    make_symlink(f_path, f_sympath)
+                    restart_files_local.add(os.path.join(model.work_path_local,f_name))
+
+            if restart_files_local:
+                # Add to input manifest all at once (parallelised)
+                self.expt.restart_manifest.add_fast(list(restart_files_local))
+
+        # Do not need to make these links if using existing restart manifest
+        if not self.expt.have_input_manifest:
+
+            input_files = []
+
+            # Find all the coupler restart files that have been added
+            # to the restart manifest
+            for f in self.expt.input_manifest:
+                if f.startswith(self.work_path_local):
+                    input_files.append(os.path.relpath(f,self.work_path_local)) 
 
             input_files_local = []
 
@@ -57,16 +94,15 @@ class Oasis(Model):
                     continue
 
                 mkdir_p(model.work_path)
-                for f_name in (self.config_files + input_files):
+                for f_name in input_files:
                     f_path = os.path.join(self.work_path, f_name)
                     f_sympath = os.path.join(model.work_path, f_name)
                     make_symlink(f_path, f_sympath)
-                    if f_name not in self.config_files
-                        input_files_local.append(os.path.join(model.work_path_local,f_name))
+                    input_files_local.append(os.path.join(model.work_path_local,f_name))
 
             if input_files_local:
                 # Add to input manifest all at once (parallelised)
-                self.expt.restart_manifest.add_fast(input_files_local)
+                self.expt.input_manifest.add_fast(input_files_local)
 
         if self.expt.runtime:
             # TODO: Implement runtime patch to namcouple
@@ -129,6 +165,12 @@ class Oasis(Model):
 
             if os.path.exists(f_src):
                 shutil.copy2(f_src, f_dst)
+
+        # Delete all symbolic links in work
+        for f in os.listdir(self.work_path):
+            f_path = os.path.join(self.work_path, f)
+            if os.path.islink(f_path):
+                os.remove(f_path)
 
     def collate(self):
         pass
