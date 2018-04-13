@@ -48,6 +48,7 @@ class Model(object):
         # valgrind
         self.exec_prefix = None
         self.exec_path = None
+        self.local_exec_path = None
         self.exec_name = None
         self.codebase_path = None
         self.build_exec_path = None
@@ -195,6 +196,9 @@ class Model(object):
                 restart_files = self.get_prior_restart_files()
                 restart_files_local = []
                 for f_name in restart_files:
+                    # Don't put config files in restart manifest
+                    if f_name in self.config_files:
+                        continue
                     f_restart = os.path.join(self.prior_restart_path, f_name)
                     f_input = os.path.join(self.work_init_path, f_name)
                     if self.copy_restarts:
@@ -232,7 +236,7 @@ class Model(object):
         if self.exec_path: 
             print('Exe link: ',self.exec_path, self.local_exec_path)
             make_symlink(self.exec_path, self.local_exec_path)
-            # Add to restart manifest 
+            # Add to exe manifest 
             self.expt.exe_manifest.add_fast(self.local_exec_path)
 
     def set_timestep(self, timestep):
