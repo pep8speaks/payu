@@ -174,11 +174,11 @@ class Mitgcm(Model):
             if exc.errno == errno.ENOENT:
 
                 mnc_01_grp = {
-                    'mnc_use_outdir':   True,
+                    'mnc_use_outdir': True,
                     'mnc_use_name_ni0': True,
-                    'mnc_outdir_str':   mnc_header,
-                    'mnc_outdir_date':  True,
-                    'monitor_mnc':      True
+                    'mnc_outdir_str': mnc_header,
+                    'mnc_outdir_date': True,
+                    'monitor_mnc': True
                 }
                 data_mnc_nml = {'mnc_01': mnc_01_grp}
 
